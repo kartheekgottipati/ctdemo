@@ -24,14 +24,16 @@ class AddressViewSet(viewsets.ViewSet):
     """Address Model view set"""
 
     queryset = Address.objects.all()
+    serializer_class = AddressSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
     lookup_field = "address"
 
     def list(self, request):
         """List all addresses"""
-        queryset = self.queryset.filter(user=request.user)
-        serializer = AddressSerializer(queryset, many=True)
+        queryset = self.queryset
+        addresses = queryset.filter(user=request.user)
+        serializer = AddressSerializer(addresses, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
@@ -81,7 +83,7 @@ class AddressViewSet(viewsets.ViewSet):
         if address_obj.sync_status == "SCHEDULED":
             return Response({"msg": "sync already scheduled"}, status=status.HTTP_200_OK)
 
-        res = sync_transactions.delay("address")
+        res = sync_transactions.delay(address)
         return Response({"tast_id": res.task_id}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])

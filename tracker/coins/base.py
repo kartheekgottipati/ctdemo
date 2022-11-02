@@ -39,6 +39,7 @@ class BaseCoin:
 
     def history(self, addr):
         offset = 0
+
         address = Address.objects.get(address=addr)
         address.sync_status = "STARTED"
         address.save()
@@ -56,15 +57,16 @@ class BaseCoin:
                 txs = data["txs"]
                 processed_txs = self.process_txs(address.pk, txs)
                 self.index_txs(processed_txs)
+
+                if len(txs) < 50:
+                    break
+
+                offset += 50
             except Exception as _:
                 address.last_successfull_sync = timezone.now()
                 address.sync_status = "FAILED"
                 address.save()
-
-            if len(txs) < 50:
-                break
-
-            offset += 50
+                return
 
         address.last_successfull_sync = timezone.now()
         address.sync_status = "COMPLETED"
