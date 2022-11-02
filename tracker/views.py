@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
 from tracker.models import Address, Transaction
 from tracker.tasks import sync_transactions
@@ -102,12 +103,17 @@ class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
+    pagination_class = LimitOffsetPagination
     permission_classes = [IsAuthenticated]
     lookup_field = 'address'
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         """List all addresses"""
-        queryset = self.queryset
-        transactions = queryset.filter(address__user=request.user)
-        serializer = AddressSerializer(transactions, many=True)
+        queryset = self.queryset.filter(address__user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
