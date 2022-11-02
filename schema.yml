@@ -6,7 +6,7 @@ info:
 paths:
   /addresses/:
     get:
-      operationId: addresses_retrieve
+      operationId: addresses_list
       description: List all addresses
       tags:
       - addresses
@@ -15,21 +15,43 @@ paths:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+          description: ''
     post:
       operationId: addresses_create
       description: Add new address
       tags:
       - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '201':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
   /addresses/{address}/:
     get:
-      operationId: addresses_retrieve_2
+      operationId: addresses_retrieve
       description: Retrieve a single address
       parameters:
       - in: path
@@ -44,7 +66,11 @@ paths:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
     put:
       operationId: addresses_update
       description: Update an address information
@@ -56,12 +82,28 @@ paths:
         required: true
       tags:
       - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
     patch:
       operationId: addresses_partial_update
       description: Partially update an address information
@@ -73,12 +115,27 @@ paths:
         required: true
       tags:
       - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAddress'
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
     delete:
       operationId: addresses_destroy
       description: Delete the address provided
@@ -108,12 +165,28 @@ paths:
         required: true
       tags:
       - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
   /addresses/{address}/sync_transactions/:
     post:
       operationId: addresses_sync_transactions_create
@@ -126,16 +199,32 @@ paths:
         required: true
       tags:
       - addresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Address'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Address'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+          description: ''
   /transactions/:
     get:
       operationId: transactions_list
-      description: Transaction Model view set
+      description: List all addresses
       parameters:
       - name: limit
         required: false
@@ -152,9 +241,8 @@ paths:
       tags:
       - transactions
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '200':
           content:
@@ -180,9 +268,8 @@ paths:
               $ref: '#/components/schemas/Transaction'
         required: true
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '201':
           content:
@@ -203,9 +290,8 @@ paths:
       tags:
       - transactions
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '200':
           content:
@@ -237,9 +323,8 @@ paths:
               $ref: '#/components/schemas/Transaction'
         required: true
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '200':
           content:
@@ -270,9 +355,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTransaction'
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '200':
           content:
@@ -292,14 +376,45 @@ paths:
       tags:
       - transactions
       security:
-      - basicAuth: []
       - cookieAuth: []
-      - {}
+      - basicAuth: []
       responses:
         '204':
           description: No response body
 components:
   schemas:
+    Address:
+      type: object
+      description: Serializer for Address model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          maxLength: 160
+        transaction_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        final_balance:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        last_successfull_sync:
+          type: string
+          format: date-time
+          nullable: true
+        sync_status:
+          $ref: '#/components/schemas/SyncStatusEnum'
+        user:
+          type: integer
+      required:
+      - address
+      - id
+      - user
     PaginatedTransactionList:
       type: object
       properties:
@@ -320,6 +435,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transaction'
+    PatchedAddress:
+      type: object
+      description: Serializer for Address model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        address:
+          type: string
+          maxLength: 160
+        transaction_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        final_balance:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        last_successfull_sync:
+          type: string
+          format: date-time
+          nullable: true
+        sync_status:
+          $ref: '#/components/schemas/SyncStatusEnum'
+        user:
+          type: integer
     PatchedTransaction:
       type: object
       description: Serializer for Transaction model
@@ -346,6 +489,14 @@ components:
           format: date-time
         address:
           type: integer
+    SyncStatusEnum:
+      enum:
+      - NEVER
+      - SCHEDULED
+      - STARTED
+      - FAILED
+      - COMPLETED
+      type: string
     Transaction:
       type: object
       description: Serializer for Transaction model

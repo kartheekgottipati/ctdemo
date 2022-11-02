@@ -39,10 +39,17 @@ class BaseCoin:
 
     def history(self, addr):
         offset = 0
+        try:
+            address = Address.objects.get(address=addr)
+            address.sync_status = "STARTED"
+            address.save()
+        except Address.DoesNotExist as _:
+            address.last_successfull_sync = timezone.now()
+            address.sync_status = "FAILED"
+            address.save()
 
-        address = Address.objects.get(address=addr)
-        address.sync_status = "STARTED"
-        address.save()
+            print(f"failed to sync the tranaction history for {addr}")
+            return False
 
         skip_balance_update = False
         while True:
@@ -66,7 +73,7 @@ class BaseCoin:
                 address.last_successfull_sync = timezone.now()
                 address.sync_status = "FAILED"
                 address.save()
-                return
+                return False
 
         address.last_successfull_sync = timezone.now()
         address.sync_status = "COMPLETED"

@@ -44,3 +44,5 @@ class Transaction(models.Model):
 
     class Meta:
         unique_together = ('address', 'hash')
+
+

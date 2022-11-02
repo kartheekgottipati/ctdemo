@@ -5,8 +5,7 @@ from django.urls import path
 from tracker.views import (
     AddressViewSet,
     TransactionViewSet,
-    IndexView,
-)  # pylint: disable=E0611
+)
 
 router = routers.SimpleRouter()
 

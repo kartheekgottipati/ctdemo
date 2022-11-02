@@ -99,13 +99,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'address'
 
-class IndexView(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
-    template_name = "index.html"
-
-    def get(self, request):
-        queryset = Address.objects.filter(user=request.user)
-        serializer = AddressSerializer(queryset, many=True)
+    def list(self, request):
+        """List all addresses"""
+        queryset = self.queryset
+        transactions = queryset.filter(address__user=request.user)
+        serializer = AddressSerializer(transactions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
