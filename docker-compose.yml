@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+
+  db:
+    image: postgres:12-alpine
+    hostname: db
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  redis:
+    image: 'redis:alpine'
+    hostname: redis
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: .
+    hostname: app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: bash -c "python3 manage.py makemigrations && python3 manage.py migrate --no-input && python3 manage.py spectacular --file schema.yml && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A tracker worker -l info
+    restart: on-failure
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - app
+
+volumes:
+  db-data:
