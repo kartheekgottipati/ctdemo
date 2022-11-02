@@ -37,39 +37,35 @@ class BaseCoin:
 
         serializer.save()
 
-    def history(self, addr):
+    def history(self, address):
         offset = 0
+
         try:
-            address = Address.objects.get(address=addr)
+            address = Address.objects.get(address=address)
             address.sync_status = "STARTED"
             address.save()
         except Address.DoesNotExist as _:
-            address.last_successfull_sync = timezone.now()
-            address.sync_status = "FAILED"
-            address.save()
-
-            print(f"failed to sync the tranaction history for {addr}")
+            print(f"failed to sync the tranaction history for {address}")
             return False
 
         skip_balance_update = False
         while True:
             try:
-                data = self.explorer.history(addr, offset)
+                data = self.explorer.history(address, offset)
                 if not skip_balance_update:
-                    address = Address.objects.get(address=addr)
                     address.final_balance = data['final_balance']
-                    address.transaction_count = data['transaction_count']
+                    address.transaction_count = data['n_tx']
                     address.save()
 
                 txs = data["txs"]
                 processed_txs = self.process_txs(address.pk, txs)
                 self.index_txs(processed_txs)
-
+                
                 if len(txs) < 50:
                     break
 
                 offset += 50
-            except Exception as _:
+            except Exception as e:
                 address.last_successfull_sync = timezone.now()
                 address.sync_status = "FAILED"
                 address.save()

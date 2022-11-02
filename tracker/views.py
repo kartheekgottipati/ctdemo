@@ -84,6 +84,8 @@ class AddressViewSet(viewsets.ViewSet):
             return Response({"msg": "sync already scheduled"}, status=status.HTTP_200_OK)
 
         res = sync_transactions.delay(address)
+        address_obj.sync_status = "SCHEDULED"
+        address_obj.save()
         return Response({"tast_id": res.task_id}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])

@@ -48,13 +48,3 @@ class TransactionSerializer(serializers.ModelSerializer):
 
         model = Transaction
         fields = "__all__"
-
-    def create(self, validated_data):
-        created_ids = []
-        for tx in validated_data:
-            try:
-                created = super().create(tx)
-                created_ids.append(created.pk)
-            except IntegrityError:
-                pass
-        return super().create(validated_data)
