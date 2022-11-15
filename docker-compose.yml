@@ -10,17 +10,28 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - "POSTGRES_HOST_AUTH_METHOD=trust"
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   redis:
     image: 'redis:alpine'
     hostname: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   app:
     build:
@@ -37,17 +48,25 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEBUG=false
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DEBUG=0
+    healthcheck:
+      test: wget --spider --quiet http://localhost:8000/ht/ || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
 
   celery:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A tracker worker -l info
+    hostname: celery
+    command: celery -A app worker -l info
     restart: on-failure
     volumes:
       - .:/app
@@ -57,12 +76,89 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEBUG=false
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DEBUG=0
+    healthcheck:
+      test: celery inspect ping || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - db
-      - redis
-      - app
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      app:
+        condition: service_healthy
 
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: celery-beat
+    command: celery -A app beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DEBUG=0
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: flower
+    command: celery -A app flower
+    ports:
+      - 5555:5555
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - DEBUG=0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+      celery:
+        condition: service_healthy
+
+  react:
+    build:
+      context: .
+      dockerfile: Dockerfile.Client
+    hostname: react
+    ports:
+      - 3000:80
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+      celery:
+        condition: service_healthy
+        
 volumes:
   db-data:
