@@ -28,6 +28,8 @@ class Address(models.Model):
 
     class Meta:
         unique_together = ('user', 'address')
+        verbose_name = "Address"
+        verbose_name_plural = "Addresses"
 
 class Transaction(models.Model):
     """Transaction model to keep track of transactions"""
@@ -44,5 +46,3 @@ class Transaction(models.Model):
 
     class Meta:
         unique_together = ('address', 'hash')
-
-

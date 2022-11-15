@@ -1,16 +1,16 @@
 """Tracker app views """
 from rest_framework import viewsets
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.decorators import action
+from django_filters import rest_framework as filters
 from tracker.models import Address, Transaction
 from tracker.tasks import sync_transactions
+from tracker.coins.bitcoin import Bitcoin
 
 from tracker.serializers import (
     AddressSerializer,
@@ -26,7 +26,7 @@ class AddressViewSet(viewsets.ViewSet):
 
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
     lookup_field = "address"
 
@@ -39,16 +39,19 @@ class AddressViewSet(viewsets.ViewSet):
 
     def create(self, request):
         """Add new address"""
-        serializer = AddAddressSerializer(data=request.data, context={'request': request})
+        serializer = AddAddressSerializer(
+            data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            address = serializer.validated_data['address']
+            try:
+                btc = Bitcoin()
+                basic_info = btc.fetch_basic_info(address)
+            except Exception as e:
+                return Response({"errors": e.message}, status=status.HTTP_400_BAD_REQUEST)
 
-            sync_transactions.delay(serializer.data["address"])
+            serializer.save(final_balance=basic_info["final_balance"], transaction_count=basic_info["transaction_count"])
 
-            address = serializer.data["address"]
-            address_obj = self.queryset.get(address=address)
-            address_obj.sync_status = "SCHEDULED"
-            address_obj.save()
+            sync_transactions.delay(address)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -81,35 +84,26 @@ class AddressViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['POST'])
     def sync_transactions(self, request, address=None):
         address_obj = get_object_or_404(self.queryset, address=address)
-        if address_obj.sync_status == "SCHEDULED":
-            return Response({"msg": "sync already scheduled"}, status=status.HTTP_200_OK)
-
-        res = sync_transactions.delay(address)
-        address_obj.sync_status = "SCHEDULED"
-        address_obj.save()
+        res = sync_transactions.delay(address_obj.address)
         return Response({"tast_id": res.task_id}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['POST'])
-    def reset_sync_status(self, request, address=None):
-        address_obj = get_object_or_404(self.queryset, address=address)
-        address_obj.sync_status == "COMPLETED"
-        address_obj.save()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     """Transaction Model view set"""
 
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, TokenAuthentication]
     pagination_class = LimitOffsetPagination
     permission_classes = [IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
     lookup_field = 'address'
+    filterset_fields = ['address__address']
 
     def list(self, request, *args, **kwargs):
         """List all addresses"""
-        queryset = self.queryset.filter(address__user=request.user)
+        address = request.query_params.get('search')
+        queryset = self.queryset.filter(address__user=request.user).filter(address__address=address)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
