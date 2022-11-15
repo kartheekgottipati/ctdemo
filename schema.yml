@@ -13,6 +13,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -42,6 +43,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '201':
           content:
@@ -64,6 +66,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -97,6 +100,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -129,6 +133,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -150,43 +155,10 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '204':
           description: No response body
-  /addresses/{address}/reset_sync_status/:
-    post:
-      operationId: addresses_reset_sync_status_create
-      description: Address Model view set
-      parameters:
-      - in: path
-        name: address
-        schema:
-          type: string
-        required: true
-      tags:
-      - addresses
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Address'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Address'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Address'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Address'
-          description: ''
   /addresses/{address}/sync_transactions/:
     post:
       operationId: addresses_sync_transactions_create
@@ -214,6 +186,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -221,11 +194,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Address'
           description: ''
+  /api/login/:
+    post:
+      operationId: api_login_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
+      security:
+      - basicAuth: []
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /api/logout/:
+    post:
+      operationId: api_logout_create
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
   /transactions/:
     get:
       operationId: transactions_list
       description: List all addresses
       parameters:
+      - in: query
+        name: address__address
+        schema:
+          type: string
       - name: limit
         required: false
         in: query
@@ -243,6 +258,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -270,6 +286,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '201':
           content:
@@ -292,6 +309,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -325,6 +343,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -357,6 +376,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '200':
           content:
@@ -378,6 +398,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - tokenAuth: []
       responses:
         '204':
           description: No response body
@@ -415,6 +436,22 @@ components:
       - address
       - id
       - user
+    AuthToken:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - password
+      - token
+      - username
     PaginatedTransactionList:
       type: object
       properties:
@@ -537,3 +574,8 @@ components:
       type: apiKey
       in: cookie
       name: sessionid
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
