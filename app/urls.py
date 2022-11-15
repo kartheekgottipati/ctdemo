@@ -15,14 +15,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.authtoken import views
+from .views import LogoutView
 
 urlpatterns = [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('', SpectacularSwaggerView.as_view(
+        url_name='schema'), name='swagger-ui'),
     path('', include('tracker.urls')),
-    path("api-auth/", include("rest_framework.urls")), 
+    path("api-auth/", include("rest_framework.urls")),
     path('admin/', admin.site.urls),
-    path("accounts/", include("django.contrib.auth.urls"))
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("ht/", include('health_check.urls')),
+    path("api/login/", views.obtain_auth_token, name='api-token-auth'),
+    path("api/logout/", LogoutView.as_view(), name="logout")
 ]

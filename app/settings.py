@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-t9so+v+)5(=5hn2_=0b9jrwlce5at3cg)^lq6nz+4$+b2u@wg=
 DEBUG = True
 DEBUG = os.environ.get("DEBUG", DEBUG)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,14 +39,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "rest_framework",
-    "django_extensions",
-    "tracker",
-    "drf_spectacular",
-    "drf_spectacular_sidecar",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'tracker',
+    'drf_spectacular',
+    'django_celery_beat',
+    'django_extensions',
+    'health_check',
+    'health_check.db',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,11 +146,14 @@ LOGOUT_REDIRECT_URL = "/"
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
 
+# celery beat with Database Scheduler
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',        
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 10,
@@ -161,5 +169,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-CELERY_BROKER_URL="redis://redis:6379/0"
-CELERY_RESULT_BACKEND="redis://redis:6379/0"
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000"
+]
+
+CORS_ALLOW_CREDENTIALS = True
