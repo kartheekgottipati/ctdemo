@@ -6,19 +6,26 @@
 
 `docker compose up`
 
-# Commands to simplying a few things
-
-## Creating the user
-
-`docker compose run app python3 manage.py createsuperuser`
-
 # Destroy the environment after use
 
 `docker compose down`
 
+# Commands to simplying a few things
+
 # Once the env is up and running the app can be accessed on
 
-`http:\\localhost:8000`
+## Creating the dummy users
+
+`docker exec -it <app container_id> bash`
+
+`./manage.py create_dummy_users`
+this will creates 5 dummy users
+
+[UI](http://localhost:3000)
+[BACKEND API](http://localhost:8000)
+[BACKEND SCHEMA OPEN API](http://localhost:8000)
+[BACKEND ADMIN](http://localhost:8000/admin)
+[Celery flower](http://localhost:5555)
 
 ## Root view provides access to open swagger ui
 
