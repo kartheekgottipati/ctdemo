@@ -19,7 +19,11 @@
 `docker exec -it <app container_id> bash`
 
 `./manage.py create_dummy_users`
-this will creates 5 dummy users
+
+dummy user credentials:
+
+testuser1/testpass1
+testuser2/testpass2
 
 [UI](http://localhost:3000)
 [BACKEND API](http://localhost:8000)
@@ -43,11 +47,9 @@ this will creates 5 dummy users
 
 Address has the following fields
 
-address - wallet address transaction_count - transactions associated with a wallet address final_balance - final balance of the wallet after the most recent transaction last_successfull_sync - last time the sync was successfull sync_status - status of the sync. Helps to avoid queuing the same address for syncing when 1 sync is already in progress or scheduled.
+address - wallet address transaction_count - transactions associated with a wallet address final_balance - final balance of the wallet after the most recent transaction.
 
 address + user combined is considered unique in the Account model
-
-Ensuring the scheduling to be more fine tuned takes some effort.
 
 Transaction table has the following fields Hash: Transaction hash which is a unique string of characters Inputs: transaction inputs // stored as json due to lack of time. Should be parsed and stored in a cleaner way Out: transaction outputs // stored as json due to lack of time. Should be parsed and stored in a cleaner way fee: fee paid for executing the transaction date: date and time at which the transaction is executed
 
@@ -60,3 +62,8 @@ Usage of result backend gives us the ability to moniter the status of background
 # Django rest framework built in ui is used interact with the api.
 
 # Swagger ui is also available to interact with the API
+
+Inefficiencies:
+
+Fetching all transactions during each sync. This should be optimized to avoid calls for txs that already exists.
+Using a no-sql database to store tx is a much better option than using a RDBMS db as NO-SQL is cheaper and scales much better than RDBMS.

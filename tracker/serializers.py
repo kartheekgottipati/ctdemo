@@ -23,8 +23,8 @@ class AddAddressSerializer(serializers.ModelSerializer):
         """Add address serializer meta class"""
 
         model = Address
-        fields = ["address", "user", 'transaction_count', 'final_balance', 'last_successfull_sync', 'sync_status']
-        read_only_fields = ['transaction_count', 'final_balance', 'last_successfull_sync', 'sync_status']
+        fields = ["address", "user", 'transaction_count', 'final_balance']
+        read_only_fields = ['transaction_count', 'final_balance']
     
     def validate(self, attrs):
         address = attrs.get('address')

@@ -424,12 +424,6 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-        last_successfull_sync:
-          type: string
-          format: date-time
-          nullable: true
-        sync_status:
-          $ref: '#/components/schemas/SyncStatusEnum'
         user:
           type: integer
       required:
@@ -492,12 +486,6 @@ components:
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-        last_successfull_sync:
-          type: string
-          format: date-time
-          nullable: true
-        sync_status:
-          $ref: '#/components/schemas/SyncStatusEnum'
         user:
           type: integer
     PatchedTransaction:
@@ -526,14 +514,6 @@ components:
           format: date-time
         address:
           type: integer
-    SyncStatusEnum:
-      enum:
-      - NEVER
-      - SCHEDULED
-      - STARTED
-      - FAILED
-      - COMPLETED
-      type: string
     Transaction:
       type: object
       description: Serializer for Transaction model

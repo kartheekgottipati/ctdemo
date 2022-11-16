@@ -5,8 +5,6 @@ export interface Wallet {
   address: string;
   transaction_count: number;
   final_balance: number;
-  last_successfull_sync: Date;
-  sync_status: string;
   user: number;
 }
 

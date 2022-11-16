@@ -16,8 +16,6 @@ class Address(models.Model):
     address = models.CharField(max_length=160)
     transaction_count = models.PositiveBigIntegerField(default=0)
     final_balance = models.PositiveBigIntegerField(default=0)
-    last_successfull_sync = models.DateTimeField(null=True)
-    sync_status = models.CharField(max_length=12, choices=SYNC_CHOICES, default="NEVER")
 
     def balance_in_btc(self):
         """Convert balance from SATS to BTC"""
