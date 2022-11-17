@@ -41,7 +41,12 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    command: bash -c "python3 manage.py makemigrations && python3 manage.py migrate --no-input && python3 manage.py spectacular --file schema.yml && python manage.py runserver 0.0.0.0:8000"
+    command: >
+      bash -c "python3 manage.py makemigrations
+      && python3 manage.py migrate --no-input
+      && python3 manage.py spectacular --file schema.yml
+      && python3 manage.py create_dummy_users
+      && python manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - POSTGRES_NAME=postgres
