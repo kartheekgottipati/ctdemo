@@ -23,7 +23,7 @@ export function WalletList() {
     <React.Fragment>
       <Box
         sx={{
-          margin: 6,
+          margin: 3,
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
@@ -35,7 +35,7 @@ export function WalletList() {
       </Box>
       <Box
         sx={{
-          margin: 4,
+          margin: 2,
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",

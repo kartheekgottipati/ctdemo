@@ -7,11 +7,10 @@ export default function Home() {
   return (
     <Box sx={{ flexGrow: 1, m: 4 }}>
       <Grid
-        container
         spacing={2}
         sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <Grid item xs={8}>
+        <Grid item md={10} xs={12}>
           <WalletList />
         </Grid>
       </Grid>
