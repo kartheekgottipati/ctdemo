@@ -1,5 +1,8 @@
 """_summary_
 """
+
+import time
+
 from typing import Dict, List
 from tracker.coins.coin import Coin
 from tracker.explorers.bitcoin.blockchain import BlockchainExplorer
@@ -39,17 +42,19 @@ class Bitcoin(Coin):
         """
         return self.explorer.fetch_basic_info(wallet_address)
 
-    def fetch_transactions(self, wallet_address) -> List[Dict]:
+    def fetch_transactions(self, wallet_address, offset=0, limit=50) -> List[Dict]:
         """_summary_
 
         Args:
             wallet_address (_type_): _description_
+            offset (int, optional): _description_. Defaults to 0.
+            limit (int, optional): _description_. Defaults to 50.
 
         Returns:
             List[Dict]: _description_
         """
 
-        txs = self.explorer.fetch_transactions(wallet_address)
+        txs = self.explorer.fetch_transactions(wallet_address, offset, limit)
 
         parsed_txs = []
         for tx in txs:
@@ -58,21 +63,38 @@ class Bitcoin(Coin):
 
         return parsed_txs
 
-    def fetch_all_transactions(self, wallet_address) -> List[Dict]:
+    def fetch_all_transactions(self, wallet_address, ignore_exceptions=False) -> List[Dict]:
         """_summary_
 
         Args:
             wallet_address (_type_): _description_
+            ignore_exceptions (bool, optional): _description_. Defaults to False.
+
+        Raises:
+            ex: _description_
 
         Returns:
             List[Dict]: _description_
         """
-        txs = self.explorer.fetch_all_transactions(wallet_address)
-        print(f"txs {len(txs)}")
-        parsed_txs = []
-        for tx in txs:
-            parsed_txs.append(self.transaction(
-                wallet_address, tx).parse_raw_tx_data())
+
+        offset, limit = 0, 50
+        total_txs = []
+
+        while True:
+            try:
+                parsed_txs = self.fetch_transactions(
+                    wallet_address, offset, limit)
+                total_txs.extend(parsed_txs)
+
+                if len(parsed_txs) < limit:
+                    break
+
+                offset += limit
+                time.sleep(2)
+
+            except Exception as ex:  # pylint: disable=broad-except
+                if not ignore_exceptions:
+                    raise ex
 
         return parsed_txs
 
